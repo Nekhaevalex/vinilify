@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"os"
 	"time"
 
@@ -61,17 +59,17 @@ func main() {
 	)
 
 	bh.Handle(
-		HandleDeleteImage,
+		handleDeleteImage,
 		th.CommandEqual("remove_image"),
 	)
 
 	bh.Handle(
-		HandleDeleteAudio,
+		handleDeleteAudio,
 		th.CommandEqual("remove_audio"),
 	)
 
 	bh.Handle(
-		HandleUpload,
+		handleUpload,
 		th.Any(),
 	)
 
@@ -84,9 +82,6 @@ func dirExists(path string) (bool, error) {
 	if err == nil {
 		return true, nil
 	}
-	if os.IsNotExist(err) {
-		return false, err
-	}
 	return false, err
 }
 
@@ -98,10 +93,11 @@ func handleStart(bot *tg.Bot, update tg.Update) {
 	_, ok := users[userID]
 	if !ok {
 		users[userID] = user{
-			State:     0,
-			Audiofile: nil,
-			Image:     nil,
-			Cooldown:  time.Now(),
+			Id:       userID,
+			State:    0,
+			Cooldown: time.Now(),
+			AudioURL: "",
+			ImageURL: "",
 		}
 	}
 	usr := users[userID]
@@ -120,7 +116,7 @@ func handleStart(bot *tg.Bot, update tg.Update) {
 	}
 
 	//send keyboard
-	keyboard, err := usr.GenerateKeyboard()
+	keyboard, err := usr.generateKeyboard()
 
 	var msg *tg.SendMessageParams
 	switch err {
@@ -144,15 +140,15 @@ func handleStart(bot *tg.Bot, update tg.Update) {
 	bot.SendMessage(msg)
 }
 
-func HandleDeleteImage(bot *tg.Bot, update tg.Update) {
+func handleDeleteImage(bot *tg.Bot, update tg.Update) {
 
 }
 
-func HandleDeleteAudio(bot *tg.Bot, update tg.Update) {
+func handleDeleteAudio(bot *tg.Bot, update tg.Update) {
 
 }
 
-func HandleUpload(bot *tg.Bot, update tg.Update) {
+func handleUpload(bot *tg.Bot, update tg.Update) {
 	userID := update.Message.From.ID
 	user, ok := users[userID]
 	if !ok {
@@ -167,9 +163,8 @@ func HandleUpload(bot *tg.Bot, update tg.Update) {
 	}
 
 	if update.Message.Photo != nil {
-
-		num_photos := len(update.Message.Photo)
-		if num_photos != 1 {
+		photosCount := len(update.Message.Photo)
+		if photosCount != 1 {
 			bot.SendMessage(tu.Message(update.Message.Chat.ChatID(), "Please, send a single image"))
 			return
 		}
@@ -190,32 +185,6 @@ func HandleUpload(bot *tg.Bot, update tg.Update) {
 		}
 		user.AudioURL = bot.FileDownloadURL(file.FilePath)
 	}
-
 }
 
 // func EnsureStart
-
-func (u user) DownloadAttachment(filepath string, url string) error {
-	resp, err := http.Get(url)
-	if err != nil {
-		log.Panic(err)
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	out, err := os.Create(filepath)
-	if err != nil {
-		log.Panic(err)
-		return err
-	}
-
-	defer out.Close()
-
-	_, err = io.Copy(out, resp.Body)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	return err
-}

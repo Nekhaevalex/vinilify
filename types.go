@@ -27,7 +27,7 @@ const (
 const SoundAssetPath = "Assets/Sounds/Vinyl.mp3"
 
 // user record structure
-type user struct {
+type User struct {
 	Id         int64
 	State      State
 	Generating bool
@@ -48,28 +48,28 @@ var (
 )
 
 // Returns true if user's audio file specified
-func (u user) hasAudioURL() bool {
+func (u User) hasAudioURL() bool {
 	return u.AudioURL != ""
 }
 
 // Returns true if user's image file specified
-func (u user) hasImageURL() bool {
+func (u User) hasImageURL() bool {
 	return u.ImageURL != ""
 }
 
 // Builds path to user's local audio file even without file existing
-func (u user) getAudioPath() string {
+func (u User) getAudioPath() string {
 	return filepath.Join("users", fmt.Sprintf("%d", u.Id), "audio.mp3")
 }
 
 // Builds path to user's local image file even without file existing
-func (u user) getImagePath() string {
+func (u User) getImagePath() string {
 	return filepath.Join("users", fmt.Sprintf("%d", u.Id), "video.mp4")
 }
 
 // Gets path to user's local audio file creating it's local copy if one does not exists.
 // Returns
-func (u user) getAudio() (string, error) {
+func (u User) getAudio() (string, error) {
 	if !u.hasAudioURL() {
 		return "", ErrorNoAudioURL
 	}
@@ -80,7 +80,7 @@ func (u user) getAudio() (string, error) {
 	return u.getAudioPath(), nil
 }
 
-func (u user) getImage() (string, error) {
+func (u User) getImage() (string, error) {
 	if !u.hasImageURL() {
 		return "", ErrorNoImageURL
 	}
@@ -92,7 +92,7 @@ func (u user) getImage() (string, error) {
 }
 
 // Builds keyboard markup according to user state
-func (u user) generateKeyboard() (*tg.ReplyKeyboardMarkup, error) {
+func (u User) generateKeyboard() (*tg.ReplyKeyboardMarkup, error) {
 	var keyboard *tg.ReplyKeyboardMarkup
 	var err error = nil
 	switch u.State {
@@ -125,7 +125,7 @@ func (u user) generateKeyboard() (*tg.ReplyKeyboardMarkup, error) {
 }
 
 // Mixes specified user audio and vinyl audio asset
-func (u user) mixAudio() error {
+func (u User) mixAudio() error {
 	effect := ffmpeg_go.Input(SoundAssetPath)
 	userAudioPath, err := u.getAudio()
 	if err != nil {

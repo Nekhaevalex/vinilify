@@ -9,24 +9,17 @@ import (
 	"github.com/nfnt/resize"
 )
 
-func TestRotateImage(t *testing.T) {
+func TestCropAndRotateImage(t *testing.T) {
 	img, err := gg.LoadImage("./t.png")
 	if err != nil {
 		t.Error(err)
 	}
 
-	newWidth := 500
-	newHeight := 500
+	img = resize.Resize(1000, 1000, CropAndRotateImage(img, float64(50)), resize.Lanczos3)
+	dc := gg.NewContext(1000, 1000)
+	dc.DrawImage(img, 0, 0)
+	dc.SavePNG("./test.png")
 
-	res_img := resize.Resize(uint(newWidth), uint(newHeight), img, resize.Lanczos2)
-
-	// dc.RotateAbout(1, 1000/2, 1000/2)
-	for i := range 45 {
-		dc := gg.NewContext(1000, 1000)
-		dc.RotateAbout(gg.Radians(float64(8*(i+1))), 500, 500)
-		dc.DrawImage(res_img, 250, 250)
-		dc.SavePNG(fmt.Sprintf("./tests/test_%d.png", i))
-	}
 }
 
 func TestStackImage(t *testing.T) {
@@ -76,7 +69,7 @@ func TestAssembleImage(t *testing.T) {
 
 	for i := range 3 {
 		dc := gg.NewContext(1000, 1000)
-		f = RotateImage(f, float64(8*i))
+		f = CropAndRotateImage(f, float64(8*i))
 		dc, err := StackImages(
 			dc,
 			[]image.Image{

@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"image"
 	"log"
 
@@ -9,41 +10,36 @@ import (
 	"github.com/nfnt/resize"
 )
 
+// Structs and interfaces
 type Coord struct {
 	x int
 	y int
 }
 
+type SubImager interface {
+	SubImage(r image.Rectangle) image.Image
+}
+
+// Errors
 var (
 	ErrorEmptyArray         = errors.New("empty array of images")
 	ErrorImageCoordMismatch = errors.New("len of coords must be equal to len of images")
 )
 
-// Gets the image by the `filePath`, rotates it by `d` degrees until a complete loop and returns the directory where the rotated images are stored.
-// func RotateImage(filePath string, d int) (*gg.Context, error) {
-
-// 	img, err := gg.LoadImage("./t.png")
-// 	if err != nil {
-// 		return gg.NewContext(0, 0), err
-// 	}
-
-// 	newWidth := 500
-// 	newHeight := 500
-
-// 	res_img := resize.Resize(uint(newWidth), uint(newHeight), img, resize.Lanczos2)
-
-// 	// dc.RotateAbout(1, 1000/2, 1000/2)
-
-// 	dc := gg.NewContext(1000, 1000)
-// 	dc.RotateAbout(gg.Radians(float64(d)), 500, 500)
-// 	dc.DrawImage(res_img, 250, 250)
-// 	dc.SavePNG(fmt.Sprintf("./tests/test_%d.png", d))
-
-// 	return dc, nil
-// }
+//Functions
 
 // Rotates the image about the center and returns it
-func RotateImage(img image.Image, d float64) image.Image {
+func CropAndRotateImage(img image.Image, d float64) image.Image {
+
+	bounds := img.Bounds()
+	width := bounds.Dx()
+	height := bounds.Dy()
+
+	target := min(width, height)
+
+	cropSize := image.Rect(0, 0, target, target).Add(image.Point{width/2 - target/2, height/2 - target/2})
+	img = img.(SubImager).SubImage(cropSize)
+
 	dc := gg.NewContext(img.Bounds().Dx(), img.Bounds().Dy())
 	dc.RotateAbout(
 		gg.Radians(d),
@@ -69,6 +65,7 @@ func StackImages(dc *gg.Context, imgs []image.Image, coords []Coord) (*gg.Contex
 }
 
 // Loads an image and returns a resized image
+
 func LoadAndResizeImage(path string, width uint, height uint) (image.Image, error) {
 	img, err := gg.LoadImage(path)
 	if err != nil {
@@ -78,4 +75,32 @@ func LoadAndResizeImage(path string, width uint, height uint) (image.Image, erro
 	img_res := resize.Resize(width, height, img, resize.Lanczos3)
 
 	return img_res, nil
+}
+
+func (u User) AssembleImages() (string, error) {
+
+	disk, _ := LoadAndResizeImage("./Assets/Images/Disk.png", 1000, 1000)
+	pin, _ := LoadAndResizeImage("./Assets/Images/Pin.png", 1000, 1000)
+	path, err := u.getImage()
+	if err != nil {
+		return "", err
+	}
+	userpic, _ := LoadAndResizeImage(path, 1000, 1000)
+
+	for i := range 45 {
+		dc := gg.NewContext(1000, 1000)
+		us := CropAndRotateImage(userpic, float64(i*8))
+		dc.DrawImage(us, 0, 0)
+		dc.DrawImage(disk, 0, 0)
+		dc.DrawImage(pin, 0, 0)
+		dc.SavePNG(fmt.Sprintf("./users/%d/image_%d", u.Id, i))
+	}
+
+	return fmt.Sprintf("users/%d", u.Id), nil
+
+	//1. Load image assets
+	//2. Load image from the user struct
+	//3. Generate stacked images with rotated user image
+	//4. Return the path to the folder with the iamges
+
 }

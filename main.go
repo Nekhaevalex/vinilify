@@ -14,12 +14,12 @@ func getToken() (string, error) {
 }
 
 // Global hashmap for storing user requests
-var users map[int64]user
+var users map[int64]User
 
 func main() {
 
 	// Initializing the map of the users
-	users = make(map[int64]user)
+	users = make(map[int64]User)
 
 	// Telegram API token
 	botToken, err := getToken()

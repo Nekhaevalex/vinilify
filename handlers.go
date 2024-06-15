@@ -17,7 +17,7 @@ func handleStart(bot *tg.Bot, update tg.Update) {
 	//check if user is in the map, if not - add
 	_, ok := users[userID]
 	if !ok {
-		users[userID] = user{
+		users[userID] = User{
 			Id:       userID,
 			State:    0,
 			Cooldown: time.Now(),

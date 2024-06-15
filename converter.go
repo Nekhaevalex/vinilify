@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/fogleman/gg"
+	tg "github.com/mymmrac/telego"
 	"github.com/nfnt/resize"
 )
 
@@ -102,5 +103,14 @@ func (u User) AssembleImages() (string, error) {
 	//2. Load image from the user struct
 	//3. Generate stacked images with rotated user image
 	//4. Return the path to the folder with the iamges
+
+}
+
+func (u User) GenerateVideo() (bot *tg.Bot) {
+	//1. generate images
+	return
+	//2. generate autio track
+	//3. glue both together
+	//4. send video note to the chat
 
 }

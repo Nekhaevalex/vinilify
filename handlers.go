@@ -111,3 +111,65 @@ func handleUpload(bot *tg.Bot, update tg.Update) {
 		user.AudioURL = bot.FileDownloadURL(file.FilePath)
 	}
 }
+
+func handleGenerateVideo(bot *tg.Bot, update tg.Update) {
+	userId := update.Message.From.ID
+	user, ok := users[userId]
+	if !ok {
+		msg := tu.Message(
+			update.Message.Chat.ChatID(),
+			"Send /start command to begin",
+		)
+
+		bot.SendMessage(msg)
+
+		return
+	}
+
+	//0. check if user is already generating video
+	if user.Generating {
+		msg := tu.Message(
+			update.Message.Chat.ChatID(),
+			MessageGenerating,
+		)
+		bot.SendMessage(msg)
+		return
+	}
+
+	//0.1 check if user is in cooldown
+	if time.Now().Compare(user.Cooldown) <= 0 {
+		msg := tu.Message(
+			update.Message.Chat.ChatID(),
+			MessageCooldown,
+		)
+		bot.SendMessage(msg)
+		return
+	}
+
+	//1. check if user has both audio and video file links
+	if !user.hasAudioURL() {
+		msg := tu.Message(
+			update.Message.Chat.ChatID(),
+			"You have not uploaded audio file",
+		)
+		bot.SendMessage(msg)
+		return
+	}
+
+	if !user.hasImageURL() {
+		msg := tu.Message(
+			update.Message.Chat.ChatID(),
+			"You have not uploaded image file",
+		)
+		bot.SendMessage(msg)
+		return
+	}
+
+	//2. Run the thread for generation of the video
+	go func() {
+		user.GenerateVideo()
+	}()
+}
+
+const MessageGenerating = "Your video is being processed right now, wait for it to complete"
+const MessageCooldown = "You are in cooldown, wait..."

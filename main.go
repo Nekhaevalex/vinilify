@@ -66,6 +66,11 @@ func main() {
 	)
 
 	bh.Handle(
+		handleGenerateVideo,
+		th.CommandEqual("generate"),
+	)
+
+	bh.Handle(
 		handleUpload,
 		th.Any(),
 	)

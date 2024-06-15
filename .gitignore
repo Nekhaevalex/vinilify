@@ -3,3 +3,4 @@ vinilify
 main
 users/*
 .DS_Store
+tests

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"image"
-	"log"
 	"testing"
 
 	"github.com/fogleman/gg"
@@ -47,17 +46,6 @@ func TestStackImage(t *testing.T) {
 	dc.SavePNG("./test.png")
 }
 
-func LoadAndResizeImage(path string, width uint, height uint) (image.Image, error) {
-	img, err := gg.LoadImage(path)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	img_res := resize.Resize(width, height, img, resize.Lanczos3)
-
-	return img_res, nil
-}
-
 func TestStackImages(t *testing.T) {
 	img1, _ := LoadAndResizeImage("./t.png", 500, 500)
 	img2, _ := LoadAndResizeImage("./test.png", 250, 250)
@@ -75,10 +63,36 @@ func TestStackImages(t *testing.T) {
 		Coord{x: 375, y: 375},
 	}
 
-	dc := gg.NewContext(1000, 1000)
-	dc, err := StackImages(dc, imgs, coords)
+	dc, err := StackImages(gg.NewContext(1000, 1000), imgs, coords)
 	if err != nil {
 		t.Error(err)
 	}
 	dc.SavePNG("./test_stack.png")
+}
+
+func TestAssembleImage(t *testing.T) {
+	b, _ := LoadAndResizeImage("./Assets/Images/Disk.png", 1000, 1000)
+	f, _ := LoadAndResizeImage("./t.png", 500, 500)
+
+	for i := range 3 {
+		dc := gg.NewContext(1000, 1000)
+		f = RotateImage(f, float64(8*i))
+		dc, err := StackImages(
+			dc,
+			[]image.Image{
+				f,
+				b,
+			},
+			[]Coord{
+				{x: 250, y: 250},
+				{x: 0, y: 0},
+			},
+		)
+		if err != nil {
+			t.Error(err)
+		}
+
+		dc.SavePNG(fmt.Sprintf("./t_%d.png", i))
+	}
+
 }

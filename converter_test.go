@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"image"
+	"log"
 	"testing"
 
 	"github.com/fogleman/gg"
@@ -43,4 +45,40 @@ func TestStackImage(t *testing.T) {
 	dc.DrawImage(i1s, 250, 250)
 	dc.DrawImage(b1s, 0, 0)
 	dc.SavePNG("./test.png")
+}
+
+func LoadAndResizeImage(path string, width uint, height uint) (image.Image, error) {
+	img, err := gg.LoadImage(path)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	img_res := resize.Resize(width, height, img, resize.Lanczos3)
+
+	return img_res, nil
+}
+
+func TestStackImages(t *testing.T) {
+	img1, _ := LoadAndResizeImage("./t.png", 500, 500)
+	img2, _ := LoadAndResizeImage("./test.png", 250, 250)
+	img3, _ := LoadAndResizeImage("./Assets/Images/Disk.png", 1000, 1000)
+
+	imgs := []image.Image{
+		img3,
+		img1,
+		img2,
+	}
+
+	coords := []Coord{
+		Coord{x: 0, y: 0},
+		Coord{x: 250, y: 250},
+		Coord{x: 375, y: 375},
+	}
+
+	dc := gg.NewContext(1000, 1000)
+	dc, err := StackImages(dc, imgs, coords)
+	if err != nil {
+		t.Error(err)
+	}
+	dc.SavePNG("./test_stack.png")
 }

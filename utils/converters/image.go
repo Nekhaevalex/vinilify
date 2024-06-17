@@ -10,6 +10,8 @@ import (
 )
 
 // Structs and interfaces
+
+// Coordinate for image manipulation
 type Coord struct {
 	x int
 	y int
@@ -25,7 +27,7 @@ var (
 	ErrorImageCoordMismatch = errors.New("len of coords must be equal to len of images")
 )
 
-//Functions
+// Functions
 
 // Rotates the image about the center and returns it
 func CropAndRotateImage(img image.Image, d float64) image.Image {

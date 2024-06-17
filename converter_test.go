@@ -5,6 +5,7 @@ import (
 	"image"
 	"testing"
 
+	"github.com/Nekhaevalex/vinilify/utils/converters"
 	"github.com/fogleman/gg"
 	"github.com/nfnt/resize"
 )
@@ -15,7 +16,7 @@ func TestCropAndRotateImage(t *testing.T) {
 		t.Error(err)
 	}
 
-	img = resize.Resize(1000, 1000, CropAndRotateImage(img, float64(50)), resize.Lanczos3)
+	img = resize.Resize(1000, 1000, converters.CropAndRotateImage(img, float64(50)), resize.Lanczos3)
 	dc := gg.NewContext(1000, 1000)
 	dc.DrawImage(img, 0, 0)
 	dc.SavePNG("./test.png")
@@ -40,9 +41,9 @@ func TestStackImage(t *testing.T) {
 }
 
 func TestStackImages(t *testing.T) {
-	img1, _ := LoadAndResizeImage("./t.png", 500, 500)
-	img2, _ := LoadAndResizeImage("./test.png", 250, 250)
-	img3, _ := LoadAndResizeImage("./Assets/Images/Disk.png", 1000, 1000)
+	img1, _ := converters.LoadAndResizeImage("./t.png", 500, 500)
+	img2, _ := converters.LoadAndResizeImage("./test.png", 250, 250)
+	img3, _ := converters.LoadAndResizeImage("./Assets/Images/Disk.png", 1000, 1000)
 
 	imgs := []image.Image{
 		img3,
@@ -50,13 +51,13 @@ func TestStackImages(t *testing.T) {
 		img2,
 	}
 
-	coords := []Coord{
-		Coord{x: 0, y: 0},
-		Coord{x: 250, y: 250},
-		Coord{x: 375, y: 375},
+	coords := []converters.Coord{
+		converters.Coord{x: 0, y: 0},
+		converters.Coord{x: 250, y: 250},
+		converters.Coord{x: 375, y: 375},
 	}
 
-	dc, err := StackImages(gg.NewContext(1000, 1000), imgs, coords)
+	dc, err := converters.StackImages(gg.NewContext(1000, 1000), imgs, coords)
 	if err != nil {
 		t.Error(err)
 	}
@@ -64,21 +65,21 @@ func TestStackImages(t *testing.T) {
 }
 
 func TestAssembleImage(t *testing.T) {
-	b, _ := LoadAndResizeImage("./Assets/Images/Disk.png", 1000, 1000)
-	f, _ := LoadAndResizeImage("./t.png", 500, 500)
+	b, _ := converters.LoadAndResizeImage("./Assets/Images/Disk.png", 1000, 1000)
+	f, _ := converters.LoadAndResizeImage("./t.png", 500, 500)
 
 	for i := range 3 {
 		dc := gg.NewContext(1000, 1000)
-		f = CropAndRotateImage(f, float64(8*i))
-		dc, err := StackImages(
+		f = converters.CropAndRotateImage(f, float64(8*i))
+		dc, err := converters.StackImages(
 			dc,
 			[]image.Image{
 				f,
 				b,
 			},
-			[]Coord{
-				{x: 250, y: 250},
-				{x: 0, y: 0},
+			[]converters.Coord{
+				converters.Coord{x: 250, y: 250},
+				converters.Coord{x: 0, y: 0},
 			},
 		)
 		if err != nil {

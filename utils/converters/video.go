@@ -1,3 +1,4 @@
 package converters
 
-func main()
+type Video struct {
+}

@@ -86,7 +86,7 @@ func (u User) getImage() (string, error) {
 	}
 	_, err := os.Stat(u.getImagePath())
 	if os.IsNotExist(err) {
-		return u.getImagePath(), downloads.downloadAttachment(u.getImagePath(), u.ImageURL)
+		return u.getImagePath(), utils.downloadAttachment(u.getImagePath(), u.ImageURL)
 	}
 	return "", err
 }

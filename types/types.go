@@ -8,9 +8,6 @@ import (
 	"time"
 
 	"github.com/Nekhaevalex/vinilify/utils"
-	tg "github.com/mymmrac/telego"
-	tu "github.com/mymmrac/telego/telegoutil"
-	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 )
 
 // Type for representing current state of user
@@ -24,8 +21,6 @@ const (
 	HasBoth
 	Generating
 )
-
-const SoundAssetPath = "Assets/Sounds/Vinyl.mp3"
 
 // user record structure
 type User struct {
@@ -90,56 +85,4 @@ func (u User) GetImage() (string, error) {
 		return u.GetImagePath(), utils.DownloadAttachment(u.GetImagePath(), u.ImageURL)
 	}
 	return "", err
-}
-
-// Builds keyboard markup according to user state
-func (u User) GenerateKeyboard() (*tg.ReplyKeyboardMarkup, error) {
-	var keyboard *tg.ReplyKeyboardMarkup
-	var err error = nil
-	switch u.State {
-	case Welcome:
-		err = ErrorNothingToDisplay
-	case HasImage:
-		keyboard = tu.Keyboard(
-			tu.KeyboardRow(
-				tu.KeyboardButton("/remove_image"),
-			),
-		)
-	case HasAudio:
-		keyboard = tu.Keyboard(
-			tu.KeyboardRow(
-				tu.KeyboardButton("/remove_audio"),
-			),
-		)
-	case HasBoth:
-		keyboard = tu.Keyboard(
-			tu.KeyboardRow(
-				tu.KeyboardButton("/remove_image"),
-				tu.KeyboardButton("/remove_audio"),
-			),
-		)
-	default:
-		keyboard = nil
-		err = ErrorUnknownState
-	}
-	return keyboard, err
-}
-
-// Mixes specified user audio and vinyl audio asset
-func (u User) MixAudio() error {
-	effect := ffmpeg_go.Input(SoundAssetPath)
-	userAudioPath, err := u.GetAudio()
-	if err != nil {
-		return err
-	}
-	userAudio := ffmpeg_go.Input(userAudioPath)
-	err = ffmpeg_go.Filter(
-		[]*ffmpeg_go.Stream{
-			userAudio,
-			effect,
-		},
-		"amix",
-		ffmpeg_go.Args{"inputs=2:duration=longest:dropout_transition=2"},
-	).Output("mixed_audio.mp3").Run()
-	return err
 }

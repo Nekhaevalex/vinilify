@@ -20,7 +20,7 @@ func GetRoot() string {
 // Returns absolute path to Assets directory
 func GetAssets() string {
 	root := GetRoot()
-	return filepath.Join(root, "Assets")
+	return filepath.Join(root, "assets")
 }
 
 // Checks if directory exists

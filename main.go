@@ -9,18 +9,13 @@ import (
 	th "github.com/mymmrac/telego/telegohandler"
 )
 
-func getToken() (string, error) {
-	dat, err := os.ReadFile("token")
-	return string(dat), err
-}
-
 // Global hashmap for storing user requests
-var users map[int64]types.User
+var users map[int64]*types.User
 
 func main() {
 
 	// Initializing the map of the users
-	users = make(map[int64]types.User)
+	users = make(map[int64]*types.User)
 
 	// Telegram API token
 	botToken, err := getToken()
@@ -57,16 +52,6 @@ func main() {
 	)
 
 	bh.Handle(
-		handleDeleteImage,
-		th.CommandEqual("remove_image"),
-	)
-
-	bh.Handle(
-		handleDeleteAudio,
-		th.CommandEqual("remove_audio"),
-	)
-
-	bh.Handle(
 		handleGenerateVideo,
 		th.CommandEqual("generate"),
 	)
@@ -78,4 +63,9 @@ func main() {
 
 	bh.Start()
 
+}
+
+func getToken() (string, error) {
+	dat, err := os.ReadFile("token")
+	return string(dat), err
 }

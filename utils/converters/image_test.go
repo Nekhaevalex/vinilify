@@ -48,9 +48,12 @@ func TestStackImage(t *testing.T) {
 }
 
 func TestStackImages(t *testing.T) {
-	img1, _ := LoadAndResizeImage("./t.png", 500, 500)
-	img2, _ := LoadAndResizeImage("./test.png", 250, 250)
-	img3, _ := LoadAndResizeImage("./Assets/Images/Disk.png", 1000, 1000)
+	testAssetsPath := filepath.Join(utils.GetRoot(), "utils", "converters", "test_assets")
+	testResultsPath := filepath.Join(utils.GetRoot(), "utils", "converters", "test_results")
+
+	img1, _ := LoadAndResizeImage(filepath.Join(testAssetsPath, "t.png"), 500, 500)
+	img2, _ := LoadAndResizeImage(filepath.Join(testResultsPath, "test.png"), 250, 250)
+	img3, _ := LoadAndResizeImage(filepath.Join(utils.GetAssets(), "Images", "Disk.png"), 1000, 1000)
 
 	imgs := []image.Image{
 		img3,
@@ -68,7 +71,7 @@ func TestStackImages(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	dc.SavePNG("./test_stack.png")
+	dc.SavePNG(filepath.Join(testResultsPath, "test_stack.png"))
 }
 
 func TestAssembleImage(t *testing.T) {

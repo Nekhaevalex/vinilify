@@ -12,8 +12,16 @@ import (
 	tu "github.com/mymmrac/telego/telegoutil"
 )
 
-const MessageGenerating = "Your video is being processed right now, wait for it to complete"
-const MessageCooldown = "You are in cooldown, wait..."
+const (
+	MessageGenerating       = "Your video is being processed right now, wait for it to complete"
+	MessageCooldown         = "You are in cooldown, wait..."
+	MessageUnknownCommand   = "Unknown command"
+	MessageUploadedImage    = "Image uploaded"
+	MessageUplodadedAudio   = "Audio uploaded"
+	MessageReadyToGenerate  = "Now send \"/generate\" to generate the vinyl"
+	MessageSendStartCommand = "Send \"/start\" command to begin"
+	MessageInstruction      = "Upload audio and cover image"
+)
 
 func handleStart(bot *tg.Bot, update tg.Update) {
 
@@ -22,7 +30,7 @@ func handleStart(bot *tg.Bot, update tg.Update) {
 	//check if user is in the map, if not - add
 	_, ok := users[userID]
 	if !ok {
-		users[userID] = types.User{
+		users[userID] = &types.User{
 			Id:       userID,
 			State:    0,
 			Cooldown: time.Now(),
@@ -30,81 +38,52 @@ func handleStart(bot *tg.Bot, update tg.Update) {
 			ImageURL: "",
 		}
 	}
-	usr := users[userID]
 
 	// Checking if "users" directory exists
 	usersExists, _ := utils.DirExists("./users")
 	if !usersExists {
 		// if not -- create
-		os.Mkdir("./users", os.ModeDir)
+		createdErr := os.Mkdir("./users", 0755)
+		if createdErr != nil {
+			log.Fatal(createdErr)
+		}
 	}
 
-	// Checking if user directory exists
+	// Checking if user exists
 	userDirExists, _ := utils.DirExists(fmt.Sprintf("./users/%d", userID))
 	if !userDirExists {
-		os.Mkdir(fmt.Sprintf("./users/%d", userID), os.ModeDir)
+		createdErr := os.Mkdir(fmt.Sprintf("./users/%d", userID), 0755)
+		if createdErr != nil {
+			log.Fatal(createdErr)
+		}
 	}
 
-	//send keyboard
-	keyboard, err := usr.GenerateKeyboard()
-
-	var msg *tg.SendMessageParams
-	switch err {
-	case types.ErrorNothingToDisplay:
-		msg = tu.Message(
-			tu.ID(userID),
-			"Upload audio and cover image",
-		)
-	case types.ErrorUnknownState:
-		msg = tu.Message(
-			tu.ID(userID),
-			"Something wrong happened",
-		)
-	case nil:
-		msg = tu.Message(
-			tu.ID(userID),
-			"Choose an option below",
-		).WithReplyMarkup(keyboard)
-	}
-
-	bot.SendMessage(msg)
-}
-
-func handleDeleteImage(bot *tg.Bot, update tg.Update) {
-
-}
-
-func handleDeleteAudio(bot *tg.Bot, update tg.Update) {
-
+	SendMessage(bot, update, MessageInstruction)
 }
 
 func handleUpload(bot *tg.Bot, update tg.Update) {
 	userID := update.Message.From.ID
 	user, ok := users[userID]
 	if !ok {
-		msg := tu.Message(
-			update.Message.Chat.ChatID(),
-			"Send /start command to begin",
-		)
+		SendMessage(bot, update, MessageSendStartCommand)
+		return
+	}
 
-		bot.SendMessage(msg)
-
+	if update.Message.Audio == nil && update.Message.Photo == nil {
+		SendMessage(bot, update, MessageUnknownCommand)
 		return
 	}
 
 	if update.Message.Photo != nil {
 		photosCount := len(update.Message.Photo)
-		if photosCount != 1 {
-			bot.SendMessage(tu.Message(update.Message.Chat.ChatID(), "Please, send a single image"))
-			return
-		}
 
-		file, err := bot.GetFile(&tg.GetFileParams{FileID: update.Message.Photo[0].FileID})
+		file, err := bot.GetFile(&tg.GetFileParams{FileID: update.Message.Photo[photosCount-1].FileID})
 		if err != nil {
 			log.Panic("can't retreive image file url")
 			return
 		}
 		user.ImageURL = bot.FileDownloadURL(file.FilePath)
+		SendMessage(bot, update, MessageUploadedImage)
 	}
 
 	if update.Message.Audio != nil {
@@ -114,7 +93,15 @@ func handleUpload(bot *tg.Bot, update tg.Update) {
 			return
 		}
 		user.AudioURL = bot.FileDownloadURL(file.FilePath)
+		SendMessage(bot, update, MessageUplodadedAudio)
 	}
+
+	fmt.Printf("\n\n\n%+v\n\n\n", user)
+
+	if user.HasAudioURL() && user.HasImageURL() {
+		SendMessage(bot, update, MessageReadyToGenerate)
+	}
+
 }
 
 func handleGenerateVideo(bot *tg.Bot, update tg.Update) {
@@ -178,4 +165,12 @@ func handleGenerateVideo(bot *tg.Bot, update tg.Update) {
 	//		...
 	//	)
 	// }()
+}
+
+func SendMessage(bot *tg.Bot, update tg.Update, message string) {
+	msg := tu.Message(
+		update.Message.Chat.ChatID(),
+		message,
+	)
+	bot.SendMessage(msg)
 }

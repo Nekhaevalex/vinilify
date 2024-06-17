@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/Nekhaevalex/vinilify/utils"
 	tg "github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
 	ffmpeg_go "github.com/u2takey/ffmpeg-go"
@@ -75,7 +76,7 @@ func (u User) getAudio() (string, error) {
 	}
 	_, err := os.Stat(u.getAudioPath())
 	if os.IsNotExist(err) {
-		return u.getAudioPath(), utils.downloadAttachment(u.getAudioPath(), u.AudioURL)
+		return u.getAudioPath(), utils.DownloadAttachment(u.getAudioPath(), u.AudioURL)
 	}
 	return u.getAudioPath(), nil
 }
@@ -86,7 +87,7 @@ func (u User) getImage() (string, error) {
 	}
 	_, err := os.Stat(u.getImagePath())
 	if os.IsNotExist(err) {
-		return u.getImagePath(), utils.downloadAttachment(u.getImagePath(), u.ImageURL)
+		return u.getImagePath(), utils.DownloadAttachment(u.getImagePath(), u.ImageURL)
 	}
 	return "", err
 }

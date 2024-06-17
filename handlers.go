@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/Nekhaevalex/vinilify/utils"
 	tg "github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
 )
@@ -28,14 +29,14 @@ func handleStart(bot *tg.Bot, update tg.Update) {
 	usr := users[userID]
 
 	// Checking if "users" directory exists
-	usersExists, _ := utils.dirExists("./users")
+	usersExists, _ := utils.DirExists("./users")
 	if !usersExists {
 		// if not -- create
 		os.Mkdir("./users", os.ModeDir)
 	}
 
 	// Checking if user directory exists
-	userDirExists, _ := utils.dirExists(fmt.Sprintf("./users/%d", userID))
+	userDirExists, _ := utils.DirExists(fmt.Sprintf("./users/%d", userID))
 	if !userDirExists {
 		os.Mkdir(fmt.Sprintf("./users/%d", userID), os.ModeDir)
 	}
@@ -166,9 +167,9 @@ func handleGenerateVideo(bot *tg.Bot, update tg.Update) {
 	}
 
 	//2. Run the thread for generation of the video
-	go func() {
-		user.GenerateVideo()
-	}()
+	// go func() {
+	// 	user.GenerateVideo()
+	// }()
 }
 
 const MessageGenerating = "Your video is being processed right now, wait for it to complete"

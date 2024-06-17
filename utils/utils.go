@@ -7,7 +7,8 @@ import (
 	"os"
 )
 
-func dirExists(path string) (bool, error) {
+// Checks if directory exists
+func DirExists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
 		return true, nil
@@ -15,7 +16,8 @@ func dirExists(path string) (bool, error) {
 	return false, err
 }
 
-func downloadAttachment(filepath string, url string) error {
+// Downloads and saves attachement from url to file with filepath
+func DownloadAttachment(filepath string, url string) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Panic(err)

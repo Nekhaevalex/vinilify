@@ -5,7 +5,23 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 )
+
+func GetRoot() string {
+	abs, err := filepath.Abs(".")
+	if err != nil {
+		log.Fatal("failed to retrieve absolute path")
+	}
+	return strings.SplitAfter(abs, "vinilify")[0]
+}
+
+// Returns absolute path to Assets directory
+func GetAssets() string {
+	root := GetRoot()
+	return filepath.Join(root, "Assets")
+}
 
 // Checks if directory exists
 func DirExists(path string) (bool, error) {

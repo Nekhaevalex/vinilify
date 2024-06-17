@@ -4,4 +4,4 @@ main
 users/*
 .DS_Store
 tests
-*.png
+utils/converters/test_results/*.png

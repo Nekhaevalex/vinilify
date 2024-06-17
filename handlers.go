@@ -12,6 +12,9 @@ import (
 	tu "github.com/mymmrac/telego/telegoutil"
 )
 
+const MessageGenerating = "Your video is being processed right now, wait for it to complete"
+const MessageCooldown = "You are in cooldown, wait..."
+
 func handleStart(bot *tg.Bot, update tg.Update) {
 
 	userID := update.Message.From.ID
@@ -176,6 +179,3 @@ func handleGenerateVideo(bot *tg.Bot, update tg.Update) {
 	//	)
 	// }()
 }
-
-const MessageGenerating = "Your video is being processed right now, wait for it to complete"
-const MessageCooldown = "You are in cooldown, wait..."

@@ -2,9 +2,11 @@ package converters
 
 import (
 	"errors"
+	"fmt"
 	"image"
 	"log"
 
+	"github.com/Nekhaevalex/vinilify/types"
 	"github.com/fogleman/gg"
 	"github.com/nfnt/resize"
 )
@@ -78,30 +80,30 @@ func LoadAndResizeImage(path string, width uint, height uint) (image.Image, erro
 	return img_res, nil
 }
 
-// func (u User) AssembleImages() (string, error) {
+func AssembleImages(u types.User) (string, error) {
 
-// 	disk, _ := LoadAndResizeImage("./Assets/Images/Disk.png", 1000, 1000)
-// 	pin, _ := LoadAndResizeImage("./Assets/Images/Pin.png", 1000, 1000)
-// 	path, err := u.getImage()
-// 	if err != nil {
-// 		return "", err
-// 	}
-// 	userpic, _ := LoadAndResizeImage(path, 1000, 1000)
+	disk, _ := LoadAndResizeImage("./Assets/Images/Disk.png", 1000, 1000)
+	pin, _ := LoadAndResizeImage("./Assets/Images/Pin.png", 1000, 1000)
+	path, err := u.GetImage()
+	if err != nil {
+		return "", err
+	}
+	userpic, _ := LoadAndResizeImage(path, 1000, 1000)
 
-// 	for i := range 45 {
-// 		dc := gg.NewContext(1000, 1000)
-// 		us := CropAndRotateImage(userpic, float64(i*8))
-// 		dc.DrawImage(us, 0, 0)
-// 		dc.DrawImage(disk, 0, 0)
-// 		dc.DrawImage(pin, 0, 0)
-// 		dc.SavePNG(fmt.Sprintf("./users/%d/image_%d", u.Id, i))
-// 	}
+	for i := range 45 {
+		dc := gg.NewContext(1000, 1000)
+		us := CropAndRotateImage(userpic, float64(i*8))
+		dc.DrawImage(us, 0, 0)
+		dc.DrawImage(disk, 0, 0)
+		dc.DrawImage(pin, 0, 0)
+		dc.SavePNG(fmt.Sprintf("./users/%d/image_%d", u.Id, i))
+	}
 
-// 	return fmt.Sprintf("users/%d", u.Id), nil
+	return fmt.Sprintf("users/%d", u.Id), nil
 
-// 	//1. Load image assets
-// 	//2. Load image from the user struct
-// 	//3. Generate stacked images with rotated user image
-// 	//4. Return the path to the folder with the iamges
+	//1. Load image assets
+	//2. Load image from the user struct
+	//3. Generate stacked images with rotated user image
+	//4. Return the path to the folder with the iamges
 
-// }
+}

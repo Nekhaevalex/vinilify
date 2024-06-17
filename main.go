@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/Nekhaevalex/vinilify/types"
 	tg "github.com/mymmrac/telego"
 	th "github.com/mymmrac/telego/telegohandler"
 )
@@ -14,12 +15,12 @@ func getToken() (string, error) {
 }
 
 // Global hashmap for storing user requests
-var users map[int64]User
+var users map[int64]types.User
 
 func main() {
 
 	// Initializing the map of the users
-	users = make(map[int64]User)
+	users = make(map[int64]types.User)
 
 	// Telegram API token
 	botToken, err := getToken()

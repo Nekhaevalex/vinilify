@@ -1,4 +1,4 @@
-package main
+package types
 
 import (
 	"errors"
@@ -49,51 +49,51 @@ var (
 )
 
 // Returns true if user's audio file specified
-func (u User) hasAudioURL() bool {
+func (u User) HasAudioURL() bool {
 	return u.AudioURL != ""
 }
 
 // Returns true if user's image file specified
-func (u User) hasImageURL() bool {
+func (u User) HasImageURL() bool {
 	return u.ImageURL != ""
 }
 
 // Builds path to user's local audio file even without file existing
-func (u User) getAudioPath() string {
+func (u User) GetAudioPath() string {
 	return filepath.Join("users", fmt.Sprintf("%d", u.Id), "audio.mp3")
 }
 
 // Builds path to user's local image file even without file existing
-func (u User) getImagePath() string {
+func (u User) GetImagePath() string {
 	return filepath.Join("users", fmt.Sprintf("%d", u.Id), "video.mp4")
 }
 
 // Gets path to user's local audio file creating it's local copy if one does not exists.
 // Returns
-func (u User) getAudio() (string, error) {
-	if !u.hasAudioURL() {
+func (u User) GetAudio() (string, error) {
+	if !u.HasAudioURL() {
 		return "", ErrorNoAudioURL
 	}
-	_, err := os.Stat(u.getAudioPath())
+	_, err := os.Stat(u.GetAudioPath())
 	if os.IsNotExist(err) {
-		return u.getAudioPath(), utils.DownloadAttachment(u.getAudioPath(), u.AudioURL)
+		return u.GetAudioPath(), utils.DownloadAttachment(u.GetAudioPath(), u.AudioURL)
 	}
-	return u.getAudioPath(), nil
+	return u.GetAudioPath(), nil
 }
 
-func (u User) getImage() (string, error) {
-	if !u.hasImageURL() {
+func (u User) GetImage() (string, error) {
+	if !u.HasImageURL() {
 		return "", ErrorNoImageURL
 	}
-	_, err := os.Stat(u.getImagePath())
+	_, err := os.Stat(u.GetImagePath())
 	if os.IsNotExist(err) {
-		return u.getImagePath(), utils.DownloadAttachment(u.getImagePath(), u.ImageURL)
+		return u.GetImagePath(), utils.DownloadAttachment(u.GetImagePath(), u.ImageURL)
 	}
 	return "", err
 }
 
 // Builds keyboard markup according to user state
-func (u User) generateKeyboard() (*tg.ReplyKeyboardMarkup, error) {
+func (u User) GenerateKeyboard() (*tg.ReplyKeyboardMarkup, error) {
 	var keyboard *tg.ReplyKeyboardMarkup
 	var err error = nil
 	switch u.State {
@@ -126,9 +126,9 @@ func (u User) generateKeyboard() (*tg.ReplyKeyboardMarkup, error) {
 }
 
 // Mixes specified user audio and vinyl audio asset
-func (u User) mixAudio() error {
+func (u User) MixAudio() error {
 	effect := ffmpeg_go.Input(SoundAssetPath)
-	userAudioPath, err := u.getAudio()
+	userAudioPath, err := u.GetAudio()
 	if err != nil {
 		return err
 	}

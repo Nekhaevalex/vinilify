@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/Nekhaevalex/vinilify/types"
 	"github.com/Nekhaevalex/vinilify/utils"
 	tg "github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
@@ -18,7 +19,7 @@ func handleStart(bot *tg.Bot, update tg.Update) {
 	//check if user is in the map, if not - add
 	_, ok := users[userID]
 	if !ok {
-		users[userID] = User{
+		users[userID] = types.User{
 			Id:       userID,
 			State:    0,
 			Cooldown: time.Now(),
@@ -42,16 +43,16 @@ func handleStart(bot *tg.Bot, update tg.Update) {
 	}
 
 	//send keyboard
-	keyboard, err := usr.generateKeyboard()
+	keyboard, err := usr.GenerateKeyboard()
 
 	var msg *tg.SendMessageParams
 	switch err {
-	case ErrorNothingToDisplay:
+	case types.ErrorNothingToDisplay:
 		msg = tu.Message(
 			tu.ID(userID),
 			"Upload audio and cover image",
 		)
-	case ErrorUnknownState:
+	case types.ErrorUnknownState:
 		msg = tu.Message(
 			tu.ID(userID),
 			"Something wrong happened",
@@ -148,7 +149,7 @@ func handleGenerateVideo(bot *tg.Bot, update tg.Update) {
 	}
 
 	//1. check if user has both audio and video file links
-	if !user.hasAudioURL() {
+	if !user.HasAudioURL() {
 		msg := tu.Message(
 			update.Message.Chat.ChatID(),
 			"You have not uploaded audio file",
@@ -157,7 +158,7 @@ func handleGenerateVideo(bot *tg.Bot, update tg.Update) {
 		return
 	}
 
-	if !user.hasImageURL() {
+	if !user.HasImageURL() {
 		msg := tu.Message(
 			update.Message.Chat.ChatID(),
 			"You have not uploaded image file",
@@ -167,8 +168,12 @@ func handleGenerateVideo(bot *tg.Bot, update tg.Update) {
 	}
 
 	//2. Run the thread for generation of the video
-	// go func() {
-	// 	user.GenerateVideo()
+	// go func(bot *tg.Bot, update tg.Update, u User) {
+	// 	video := user.GenerateVideo()
+	//  msg := tu.VideoNote(video)
+	//  bot.SendMessage(
+	//		...
+	//	)
 	// }()
 }
 

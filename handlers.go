@@ -28,14 +28,14 @@ func handleStart(bot *tg.Bot, update tg.Update) {
 	usr := users[userID]
 
 	// Checking if "users" directory exists
-	usersExists, _ := dirExists("./users")
+	usersExists, _ := utils.dirExists("./users")
 	if !usersExists {
 		// if not -- create
 		os.Mkdir("./users", os.ModeDir)
 	}
 
 	// Checking if user directory exists
-	userDirExists, _ := dirExists(fmt.Sprintf("./users/%d", userID))
+	userDirExists, _ := utils.dirExists(fmt.Sprintf("./users/%d", userID))
 	if !userDirExists {
 		os.Mkdir(fmt.Sprintf("./users/%d", userID), os.ModeDir)
 	}

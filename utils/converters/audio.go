@@ -1,75 +1,81 @@
 package converters
 
 import (
+	"os"
+
 	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 )
 
 // Mixes specified user audio and vinyl audio asset
-func Mix(music, effect *ffmpeg_go.Stream) error {
-	result := ffmpeg_go.Filter(
+
+func Mix(effect, music, outfile string) error {
+
+	//remove outfile if exists
+	if fileExists(outfile) {
+		if err := deleteFile(outfile); err != nil {
+			return err
+		}
+	}
+
+	s1 := ffmpeg_go.Input(effect)
+	s2 := ffmpeg_go.Input(music)
+	return ffmpeg_go.Filter(
 		[]*ffmpeg_go.Stream{
-			music,
-			effect,
+			s1,
+			s2,
 		},
 		"amix",
-		ffmpeg_go.Args{"inputs=2:duration=longest:dropout_transition=2"},
-	).Output("mixed_audio.mp3").Run()
-	return result
+		ffmpeg_go.Args{"inputs=2:duration=first:dropout_transition=2"},
+	).Output(outfile).Run()
 }
 
-func Trim(music *ffmpeg_go.Stream) *ffmpeg_go.Stream {
-	return music.Trim(ffmpeg_go.KwArgs{"ss": "0", "t": "60"})
+func fileExists(filename string) bool {
+	_, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return err == nil
 }
 
-func TrimFile(inputFilePath, outputFilePath string) error {
-	err := ffmpeg_go.Input(inputFilePath).
-		Output(outputFilePath, ffmpeg_go.KwArgs{"ss": "0", "t": "60"}).
-		Run()
-	return err
+func deleteFile(filename string) error {
+	err := os.Remove(filename)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-// getDuration returns the duration of the audio file in seconds
-// func getDuration(filePath string) (float64, error) {
-// 	out, err := exec.Command("ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", filePath).Output()
+// func Mix(music, effect *ffmpeg_go.Stream) *ffmpeg_go.Stream {
+// 	return ffmpeg_go.Filter(
+// 		[]*ffmpeg_go.Stream{
+// 			music,
+// 			effect,
+// 		},
+// 		"amix",
+// 		ffmpeg_go.Args{"inputs=2:duration=first:dropout_transition=2"},
+// 	)
+// }
+// func AssebmleAudio(music, effect string, userId int) error {
+
+// 	outputFilePath := filepath.Join(utils.GetRoot(), "users", fmt.Sprintf("%d", userId), "audio.mp3")
+
+// 	musicStream := Trim(ffmpeg_go.Input(music), 60)
+// 	effectStream := Trim(ffmpeg_go.Input(effect), 60)
+// 	s := Mix(musicStream, effectStream)
+// 	err := s.Output(outputFilePath).Run()
 // 	if err != nil {
-// 		return 0, err
+// 		return err
 // 	}
-// 	durationStr := strings.TrimSpace(string(out))
-// 	return strconv.ParseFloat(durationStr, 64)
+// 	return nil
+
+// }
+// func Trim(music *ffmpeg_go.Stream, duration int) *ffmpeg_go.Stream {
+// 	return music.Trim(ffmpeg_go.KwArgs{"duration": fmt.Sprintf("%d", duration)})
 // }
 
-// func main() {
-// 	file1 := "input1.mp3"
-// 	file2 := "input2.mp3"
-// 	outputFile := "output_mixed.mp3"
-
-// 	// Get durations of both files
-// 	duration1, err := getDuration(file1)
-// 	if err != nil {
-// 		log.Fatalf("Error getting duration of file %s: %v", file1, err)
-// 	}
-
-// 	duration2, err := getDuration(file2)
-// 	if err != nil {
-// 		log.Fatalf("Error getting duration of file %s: %v", file2, err)
-// 	}
-
-// 	// Get the shortest duration
-// 	shortestDuration := duration1
-// 	if duration2 < duration1 {
-// 		shortestDuration = duration2
-// 	}
-
-// 	// Mix the two MP3 files and limit the duration to the shortest file
-// 	err = ffmpeg_go.Input(file1).
-// 		Input(file2).
-// 		FilterComplex("amix=inputs=2:duration=shortest").
-// 		Output(outputFile, ffmpeg_go.KwArgs{"t": strconv.Itoa(int(shortestDuration))}).
+// func TrimFile(inputFilePath, outputFilePath string) error {
+// 	err := ffmpeg_go.Input(inputFilePath).
+// 		Output(outputFilePath, ffmpeg_go.KwArgs{"ss": "0", "t": "60"}).
 // 		Run()
-
-// 	if err != nil {
-// 		log.Fatalf("Error mixing the MP3 files: %v", err)
-// 	}
-
-// 	log.Println("MP3 files mixed successfully!")
+// 	return err
 // }

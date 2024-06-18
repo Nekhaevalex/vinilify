@@ -60,7 +60,7 @@ func (u User) GetAudioPath() string {
 
 // Builds path to user's local image file even without file existing
 func (u User) GetImagePath() string {
-	return filepath.Join("users", fmt.Sprintf("%d", u.Id), "video.mp4")
+	return filepath.Join("users", fmt.Sprintf("%d", u.Id), "image.jpg")
 }
 
 // Gets path to user's local audio file creating it's local copy if one does not exists.

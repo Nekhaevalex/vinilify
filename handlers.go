@@ -4,23 +4,40 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/Nekhaevalex/vinilify/types"
 	"github.com/Nekhaevalex/vinilify/utils"
+	"github.com/Nekhaevalex/vinilify/utils/converters"
 	tg "github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
 )
 
 const (
-	MessageGenerating       = "Your video is being processed right now, wait for it to complete"
-	MessageCooldown         = "You are in cooldown, wait..."
-	MessageUnknownCommand   = "Unknown command"
-	MessageUploadedImage    = "Image uploaded"
-	MessageUplodadedAudio   = "Audio uploaded"
-	MessageReadyToGenerate  = "Now send \"/generate\" to generate the vinyl"
-	MessageSendStartCommand = "Send \"/start\" command to begin"
-	MessageInstruction      = "Upload audio and cover image"
+	//start command
+	MessageSendStart      = "Send \"/start\" command to begin"
+	MessageInstruction    = "Upload audio and cover image"
+	MessageUnknownCommand = "Unknown command"
+
+	//upload notificators
+	MessageUploadedImage   = "Image uploaded"
+	MessageUplodadedAudio  = "Audio uploaded"
+	MessageReadyToGenerate = "Now send \"/generate\" to generate the vinyl"
+
+	//error notificators
+	MessageNoAudio = "You have not uploaded audio file"
+	MessageNoImage = "You have not uploaded image file"
+
+	//block notificators
+	MessageGenerating = "Your video is being processed right now, wait for it to complete"
+	MessageCooldown   = "You are in cooldown, wait..."
+
+	//generator notificators
+	MessageAudioDownloadFailed = "Could not download audio"
+	MessageImageDownloadFailed = "Could not download image"
+	MessageDownloadComplete    = "Files downloaded, generating video..."
+	MessageDownloadStarted     = "Downloading files..."
 )
 
 func handleStart(bot *tg.Bot, update tg.Update) {
@@ -65,7 +82,7 @@ func handleUpload(bot *tg.Bot, update tg.Update) {
 	userID := update.Message.From.ID
 	user, ok := users[userID]
 	if !ok {
-		SendMessage(bot, update, MessageSendStartCommand)
+		SendMessage(bot, update, MessageSendStart)
 		return
 	}
 
@@ -96,11 +113,11 @@ func handleUpload(bot *tg.Bot, update tg.Update) {
 		SendMessage(bot, update, MessageUplodadedAudio)
 	}
 
-	fmt.Printf("\n\n\n%+v\n\n\n", user)
-
 	if user.HasAudioURL() && user.HasImageURL() {
 		SendMessage(bot, update, MessageReadyToGenerate)
 	}
+
+	fmt.Printf("\n\n\n%+v\n\n\n", user)
 
 }
 
@@ -108,63 +125,84 @@ func handleGenerateVideo(bot *tg.Bot, update tg.Update) {
 	userId := update.Message.From.ID
 	user, ok := users[userId]
 	if !ok {
-		msg := tu.Message(
-			update.Message.Chat.ChatID(),
-			"Send /start command to begin",
-		)
-
-		bot.SendMessage(msg)
-
+		SendMessage(bot, update, MessageSendStart)
 		return
 	}
 
 	//0. check if user is already generating video
 	if user.Generating {
-		msg := tu.Message(
-			update.Message.Chat.ChatID(),
-			MessageGenerating,
-		)
-		bot.SendMessage(msg)
+		SendMessage(bot, update, MessageGenerating)
 		return
 	}
 
 	//0.1 check if user is in cooldown
 	if time.Now().Compare(user.Cooldown) <= 0 {
-		msg := tu.Message(
-			update.Message.Chat.ChatID(),
-			MessageCooldown,
-		)
-		bot.SendMessage(msg)
+		SendMessage(bot, update, MessageCooldown)
 		return
 	}
 
 	//1. check if user has both audio and video file links
 	if !user.HasAudioURL() {
-		msg := tu.Message(
-			update.Message.Chat.ChatID(),
-			"You have not uploaded audio file",
-		)
-		bot.SendMessage(msg)
+		SendMessage(bot, update, MessageNoAudio)
 		return
 	}
 
 	if !user.HasImageURL() {
-		msg := tu.Message(
-			update.Message.Chat.ChatID(),
-			"You have not uploaded image file",
-		)
-		bot.SendMessage(msg)
+		SendMessage(bot, update, MessageNoImage)
 		return
 	}
 
-	//2. Run the thread for generation of the video
-	// go func(bot *tg.Bot, update tg.Update, u User) {
-	// 	video := user.GenerateVideo()
-	//  msg := tu.VideoNote(video)
-	//  bot.SendMessage(
-	//		...
-	//	)
-	// }()
+	//2. Go generate video note
+	user.Generating = true
+	go GenerateVideo(bot, update, user)
+}
+
+func GenerateVideo(bot *tg.Bot, update tg.Update, user *types.User) {
+
+	defer func() {
+		user.Generating = false
+		user.Cooldown = time.Now().Add(time.Second * 100)
+	}()
+
+	//1. Download audio and image to the folder
+	audioPath := user.GetAudioPath()
+	imagePath := user.GetImagePath()
+	SendMessage(bot, update, MessageDownloadStarted)
+
+	err := utils.DownloadAttachment(audioPath, user.AudioURL)
+	if err != nil {
+		SendMessage(bot, update, MessageAudioDownloadFailed)
+		return
+	}
+	err = utils.DownloadAttachment(imagePath, user.ImageURL)
+	if err != nil {
+		SendMessage(bot, update, MessageImageDownloadFailed)
+		return
+	}
+
+	SendMessage(bot, update, MessageDownloadComplete)
+	SendMessage(bot, update, "Preparing for generation...")
+
+	//2. Mix audio with effect
+
+	effect := filepath.Join(utils.GetRoot(), "assets", "sounds", "vinyl.mp3")
+	music := filepath.Join(utils.GetRoot(), "users", fmt.Sprintf("%d", user.Id), "audio.mp3")
+	mix := filepath.Join(utils.GetRoot(), "users", fmt.Sprintf("%d", user.Id), "mix.mp3")
+
+	err = converters.Mix(effect, music, mix)
+	if err != nil {
+		SendMessage(bot, update, "Error mixing audio "+err.Error())
+		return
+	}
+
+	//3. Generate images
+
+	image := filepath.Join(utils.GetRoot(), "users", fmt.Sprintf("%d", user.Id), "image.jpg")
+	imageOut := filepath.Join(utils.GetRoot(), "users", fmt.Sprintf("%d", user.Id))
+	err = converters.AssembleImages(image, imageOut)
+	if err != nil {
+		SendMessage(bot, update, "Error generating images "+err.Error())
+	}
 }
 
 func SendMessage(bot *tg.Bot, update tg.Update, message string) {

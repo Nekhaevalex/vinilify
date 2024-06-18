@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"image"
 	"log"
+	"path/filepath"
 
-	"github.com/Nekhaevalex/vinilify/types"
+	"github.com/Nekhaevalex/vinilify/utils"
 	"github.com/fogleman/gg"
 	"github.com/nfnt/resize"
 )
@@ -27,6 +28,11 @@ type SubImager interface {
 var (
 	ErrorEmptyArray         = errors.New("empty array of images")
 	ErrorImageCoordMismatch = errors.New("len of coords must be equal to len of images")
+)
+
+var (
+	diskpath = filepath.Join(utils.GetAssets(), "images", "disk.png")
+	pinpath  = filepath.Join(utils.GetAssets(), "images", "pin.png")
 )
 
 // Functions
@@ -80,26 +86,33 @@ func LoadAndResizeImage(path string, width uint, height uint) (image.Image, erro
 	return img_res, nil
 }
 
-func AssembleImages(u types.User) (string, error) {
+func AssembleImages(imagePath, outpath string) error {
 
-	disk, _ := LoadAndResizeImage("./Assets/Images/Disk.png", 1000, 1000)
-	pin, _ := LoadAndResizeImage("./Assets/Images/Pin.png", 1000, 1000)
-	path, err := u.GetImage()
+	disk, err := LoadAndResizeImage(diskpath, 1000, 1000)
 	if err != nil {
-		return "", err
+		return err
 	}
-	userpic, _ := LoadAndResizeImage(path, 1000, 1000)
+	pin, err := LoadAndResizeImage(pinpath, 1000, 1000)
+	if err != nil {
+		return err
+	}
 
-	for i := range 45 {
+	userpic, err := LoadAndResizeImage(imagePath, 1000, 1000)
+	if err != nil {
+		return err
+	}
+
+	for i := range 32 {
 		dc := gg.NewContext(1000, 1000)
-		us := CropAndRotateImage(userpic, float64(i*8))
+		us := CropAndRotateImage(userpic, float64(i*360/32))
 		dc.DrawImage(us, 0, 0)
 		dc.DrawImage(disk, 0, 0)
 		dc.DrawImage(pin, 0, 0)
-		dc.SavePNG(fmt.Sprintf("./users/%d/image_%d", u.Id, i))
+		dc.SavePNG(fmt.Sprintf("%s/%d.jpg", outpath, i))
+		fmt.Println(fmt.Sprintf("%s/%d.jpg", outpath, i))
 	}
 
-	return fmt.Sprintf("users/%d", u.Id), nil
+	return nil
 
 	//1. Load image assets
 	//2. Load image from the user struct

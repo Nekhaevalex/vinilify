@@ -154,6 +154,7 @@ func handleGenerateVideo(bot *tg.Bot, update tg.Update) {
 
 	//2. Go generate video note
 	user.Generating = true
+
 	go GenerateVideo(bot, update, user)
 }
 
@@ -163,6 +164,9 @@ func GenerateVideo(bot *tg.Bot, update tg.Update, user *types.User) {
 		user.Generating = false
 		user.Cooldown = time.Now().Add(time.Second * 100)
 	}()
+
+	assetsPath := utils.GetAssets()
+	userPath := utils.GetUserPath(user.Id)
 
 	//1. Download audio and image to the folder
 	audioPath := user.GetAudioPath()
@@ -185,9 +189,9 @@ func GenerateVideo(bot *tg.Bot, update tg.Update, user *types.User) {
 
 	//2. Mix audio with effect
 
-	effect := filepath.Join(utils.GetRoot(), "assets", "sounds", "vinyl.mp3")
-	music := filepath.Join(utils.GetRoot(), "users", fmt.Sprintf("%d", user.Id), "audio.mp3")
-	mix := filepath.Join(utils.GetRoot(), "users", fmt.Sprintf("%d", user.Id), "mix.mp3")
+	effect := assetsPath + "/sounds/vinyl.mp3"
+	music := userPath + "/audio.mp3"
+	mix := userPath + "/mix.mp3" //mixed audio is stored in users/.../mix.mp3
 
 	err = converters.Mix(effect, music, mix)
 	if err != nil {
@@ -199,10 +203,40 @@ func GenerateVideo(bot *tg.Bot, update tg.Update, user *types.User) {
 
 	image := filepath.Join(utils.GetRoot(), "users", fmt.Sprintf("%d", user.Id), "image.jpg")
 	imageOut := filepath.Join(utils.GetRoot(), "users", fmt.Sprintf("%d", user.Id))
-	err = converters.AssembleImages(image, imageOut)
+	err = converters.AssembleImages(image, imageOut) //video frames are stored in users/.../01...32.png
 	if err != nil {
 		SendMessage(bot, update, "Error generating images "+err.Error())
 	}
+
+	//4. Generate 1 second video
+	patternPath := userPath + "/%02d.png"
+	secondVideoPath := userPath + "/secondvideo.mp4"
+	err = converters.SecondVideo(patternPath, secondVideoPath) //video is stored in users/.../secondvideo.mp4
+	if err != nil {
+		SendMessage(bot, update, "Error generating a second-long video "+err.Error())
+	}
+
+	//5. Generate minute long video
+	minuteVideoPath := userPath + "/minutevideo.mp4"
+	err = converters.LoopVideo(secondVideoPath, minuteVideoPath)
+	if err != nil {
+		SendMessage(bot, update, "Error generating a minute-long video "+err.Error())
+	}
+
+	//6. Mix audio and video together
+	videoPath := userPath + "/output.mp4"
+	converters.AddAudio(mix, minuteVideoPath, videoPath)
+	SendMessage(bot, update, "Video has been generated, sending...")
+
+	videoFile, err := os.Open(videoPath)
+	if err != nil {
+		SendMessage(bot, update, "Can't open the generated video file "+err.Error())
+	}
+
+	bot.SendVideoNote(tu.VideoNote(update.Message.Chat.ChatID(), tg.InputFile{
+		File: videoFile,
+	}))
+
 }
 
 func SendMessage(bot *tg.Bot, update tg.Update, message string) {

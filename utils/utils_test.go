@@ -14,3 +14,7 @@ func TestDirExists(t *testing.T) {
 	exists, _ = DirExists(userPath1)
 	t.Log(exists)
 }
+
+func TestUserFilepath(t *testing.T) {
+	t.Log(GetUserPath(123))
+}

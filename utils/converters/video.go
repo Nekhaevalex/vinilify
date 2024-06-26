@@ -43,5 +43,5 @@ func LoopVideo(inputFile, outputFile string) error {
 }
 
 func AddAudio(audioFile, videoFile, outputFile string) {
-	exec.Command("ffmpeg -i " + videoFile + " -i " + audioFile + " output.mp4")
+	exec.Command("ffmpeg -i " + videoFile + " -i " + audioFile + " " + outputFile)
 }

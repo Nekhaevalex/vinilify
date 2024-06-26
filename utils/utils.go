@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -21,6 +22,12 @@ func GetRoot() string {
 func GetAssets() string {
 	root := GetRoot()
 	return filepath.Join(root, "assets")
+}
+
+// Returns absolute path to the user directory
+func GetUserPath(userId int64) string {
+	root := GetRoot()
+	return filepath.Join(root, "users", fmt.Sprintf("%d", userId))
 }
 
 // Checks if directory exists

@@ -1,7 +1,6 @@
 package converters
 
 import (
-	"fmt"
 	"image"
 	"path/filepath"
 	"testing"
@@ -75,30 +74,11 @@ func TestStackImages(t *testing.T) {
 }
 
 func TestAssembleImage(t *testing.T) {
-	testAssetsPath := filepath.Join(utils.GetRoot(), "utils", "converters", "test_assets")
-	testResultsPath := filepath.Join(utils.GetRoot(), "utils", "converters", "test_results")
+	testInputPath := "../../users/286946560/image.jpg"
+	testOutPath := "../../users/286946560"
 
-	b, _ := LoadAndResizeImage(filepath.Join(utils.GetAssets(), "Images", "Disk.png"), 1000, 1000)
-	f, _ := LoadAndResizeImage(filepath.Join(testAssetsPath, "t.png"), 500, 500)
-
-	for i := range 3 {
-		dc := gg.NewContext(1000, 1000)
-		f = CropAndRotateImage(f, float64(8*i))
-		dc, err := StackImages(
-			dc,
-			[]image.Image{
-				f,
-				b,
-			},
-			[]Coord{
-				{x: 250, y: 250},
-				{x: 0, y: 0},
-			},
-		)
-		if err != nil {
-			t.Error(err)
-		}
-
-		dc.SavePNG(filepath.Join(testResultsPath, fmt.Sprintf("t_%d.png", i)))
+	err := AssembleImages(testInputPath, testOutPath)
+	if err != nil {
+		t.Error(err)
 	}
 }

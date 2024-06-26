@@ -6,6 +6,7 @@ import (
 	"image"
 	"log"
 	"path/filepath"
+	"sync"
 
 	"github.com/Nekhaevalex/vinilify/utils"
 	"github.com/fogleman/gg"
@@ -102,15 +103,34 @@ func AssembleImages(imagePath, outpath string) error {
 		return err
 	}
 
+	fmt.Printf("Lol")
+
+	var wg sync.WaitGroup
 	for i := range 32 {
-		dc := gg.NewContext(1000, 1000)
-		us := CropAndRotateImage(userpic, float64(i*360/32))
-		dc.DrawImage(us, 0, 0)
-		dc.DrawImage(disk, 0, 0)
-		dc.DrawImage(pin, 0, 0)
-		dc.SavePNG(fmt.Sprintf("%s/%d.jpg", outpath, i))
-		fmt.Println(fmt.Sprintf("%s/%d.jpg", outpath, i))
+		wg.Add(1)
+		go func(i int, wg *sync.WaitGroup) {
+			defer wg.Done()
+			dc := gg.NewContext(1000, 1000)
+			us := CropAndRotateImage(userpic, float64(i*360/32))
+			dc.DrawImage(us, 0, 0)
+			dc.DrawImage(disk, 0, 0)
+			dc.DrawImage(pin, 0, 0)
+			dc.SavePNG(fmt.Sprintf("%s/%02d.png", outpath, i+1))
+			fmt.Println(fmt.Sprintf("%s/%02d.png", outpath, i+1))
+		}(i, &wg)
 	}
+
+	wg.Wait()
+	// for i := range 32 {
+
+	// 	dc := gg.NewContext(1000, 1000)
+	// 	us := CropAndRotateImage(userpic, float64(i*360/32))
+	// 	dc.DrawImage(us, 0, 0)
+	// 	dc.DrawImage(disk, 0, 0)
+	// 	dc.DrawImage(pin, 0, 0)
+	// 	dc.SavePNG(fmt.Sprintf("%s/%d.jpg", outpath, i))
+	// 	fmt.Println(fmt.Sprintf("%s/%d.jpg", outpath, i))
+	// }
 
 	return nil
 

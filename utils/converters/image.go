@@ -98,7 +98,7 @@ func AssembleImages(imagePath, outpath string) error {
 		return err
 	}
 
-	userpic, err := LoadAndResizeImage(imagePath, 300, 300)
+	userpic, err := LoadAndResizeImage(imagePath, 150, 150)
 	if err != nil {
 		return err
 	}
@@ -110,9 +110,9 @@ func AssembleImages(imagePath, outpath string) error {
 		wg.Add(1)
 		go func(i int, wg *sync.WaitGroup) {
 			defer wg.Done()
-			dc := gg.NewContext(1000, 1000)
+			dc := gg.NewContext(300, 300)
 			us := CropAndRotateImage(userpic, float64(i*360/32))
-			dc.DrawImage(us, 0, 0)
+			dc.DrawImage(us, 75, 75)
 			dc.DrawImage(disk, 0, 0)
 			dc.DrawImage(pin, 0, 0)
 			dc.SavePNG(fmt.Sprintf("%s/%02d.png", outpath, i+1))

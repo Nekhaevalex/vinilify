@@ -48,18 +48,6 @@ func TestAddAudioCmd(t *testing.T) {
 
 }
 
-func TestCompress(t *testing.T) {
-	inPath := "../../users/286946560/output.mp4"
-	outPath := "../../users/286946560/output_compressed.mp4"
-	cmd := exec.Command("ffmpeg", "-i", inPath, "-vcodec", "h264", "-acodec", "mp2", outPath)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-	err := cmd.Run()
-	if err != nil {
-		t.Error(err)
-	}
-}
-
 func TestAddAudio(t *testing.T) {
 	videoPath := "../../users/286946560/minutevideo.mp4"
 	audioPath := "../../users/286946560/mix.mp3"

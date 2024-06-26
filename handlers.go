@@ -206,6 +206,7 @@ func GenerateVideo(bot *tg.Bot, update tg.Update, user *types.User) {
 	err = converters.AssembleImages(image, imageOut) //video frames are stored in users/.../01...32.png
 	if err != nil {
 		SendMessage(bot, update, "Error generating images "+err.Error())
+		return
 	}
 
 	//4. Generate 1 second video
@@ -214,6 +215,7 @@ func GenerateVideo(bot *tg.Bot, update tg.Update, user *types.User) {
 	err = converters.SecondVideo(patternPath, secondVideoPath) //video is stored in users/.../secondvideo.mp4
 	if err != nil {
 		SendMessage(bot, update, "Error generating a second-long video "+err.Error())
+		return
 	}
 
 	//5. Generate minute long video
@@ -221,16 +223,24 @@ func GenerateVideo(bot *tg.Bot, update tg.Update, user *types.User) {
 	err = converters.LoopVideo(secondVideoPath, minuteVideoPath)
 	if err != nil {
 		SendMessage(bot, update, "Error generating a minute-long video "+err.Error())
+		return
 	}
 
 	//6. Mix audio and video together
 	videoPath := userPath + "/output.mp4"
-	converters.AddAudio(mix, minuteVideoPath, videoPath)
+	err = converters.AddAudio(mix, minuteVideoPath, videoPath)
+	if err != nil {
+		SendMessage(bot, update, "Error generating the final video "+err.Error())
+		return
+	}
+
+	//7. Send the video note to the user
 	SendMessage(bot, update, "Video has been generated, sending...")
 
 	videoFile, err := os.Open(videoPath)
 	if err != nil {
 		SendMessage(bot, update, "Can't open the generated video file "+err.Error())
+		return
 	}
 
 	bot.SendVideoNote(tu.VideoNote(update.Message.Chat.ChatID(), tg.InputFile{

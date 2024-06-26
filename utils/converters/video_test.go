@@ -3,6 +3,7 @@ package converters
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"testing"
 )
 
@@ -29,4 +30,19 @@ func TestLoopVideo(t *testing.T) {
 	inputFile := "../../users/286946560/secondvideo.mp4"
 	outputFile := "minutevideo.mp4"
 	LoopVideo(inputFile, outputFile)
+}
+
+func TestAddAudio(t *testing.T) {
+	videoPath := "../../users/286946560/minutevideo.mp4"
+	audioPath := "../../users/286946560/mix.mp3"
+	outPath := "../../users/286946560/output.mp4"
+
+	cmd := exec.Command("ffmpeg", "-i", videoPath, "-i", audioPath, "-c", "copy", "-map", "0:v:0", "-map", "1:a:0", outPath)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	// cmd := exec.Command("ffmpeg -i ../../users/286946560/minutevideo.mp4 -i ../../users/286946560/mix.mp3 -c copy -map 0:v:0 -map 1:a:0 ../../users/286946560/output.mp4")
+	err := cmd.Run()
+	if err != nil {
+		t.Error(err)
+	}
 }

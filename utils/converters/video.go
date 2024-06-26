@@ -3,6 +3,7 @@ package converters
 import (
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 
 	ffmpeg_go "github.com/u2takey/ffmpeg-go"
@@ -42,6 +43,14 @@ func LoopVideo(inputFile, outputFile string) error {
 	return nil
 }
 
-func AddAudio(audioFile, videoFile, outputFile string) {
-	exec.Command("ffmpeg -i " + videoFile + " -i " + audioFile + " " + outputFile)
+func AddAudio(audioFile, videoFile, outputFile string) error {
+	cmd := exec.Command("ffmpeg", "-i", videoFile, "-i", audioFile, "-c", "copy", "-map", "0:v:0", "-map", "1:a:0", outputFile)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

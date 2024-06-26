@@ -75,19 +75,19 @@ func handleStart(bot *tg.Bot, update tg.Update) {
 		}
 	}
 
-	SendMessage(bot, update, MessageInstruction)
+	sendMessage(bot, update, MessageInstruction)
 }
 
 func handleUpload(bot *tg.Bot, update tg.Update) {
 	userID := update.Message.From.ID
 	user, ok := users[userID]
 	if !ok {
-		SendMessage(bot, update, MessageSendStart)
+		sendMessage(bot, update, MessageSendStart)
 		return
 	}
 
 	if update.Message.Audio == nil && update.Message.Photo == nil {
-		SendMessage(bot, update, MessageUnknownCommand)
+		sendMessage(bot, update, MessageUnknownCommand)
 		return
 	}
 
@@ -100,7 +100,7 @@ func handleUpload(bot *tg.Bot, update tg.Update) {
 			return
 		}
 		user.ImageURL = bot.FileDownloadURL(file.FilePath)
-		SendMessage(bot, update, MessageUploadedImage)
+		sendMessage(bot, update, MessageUploadedImage)
 	}
 
 	if update.Message.Audio != nil {
@@ -110,11 +110,11 @@ func handleUpload(bot *tg.Bot, update tg.Update) {
 			return
 		}
 		user.AudioURL = bot.FileDownloadURL(file.FilePath)
-		SendMessage(bot, update, MessageUplodadedAudio)
+		sendMessage(bot, update, MessageUplodadedAudio)
 	}
 
 	if user.HasAudioURL() && user.HasImageURL() {
-		SendMessage(bot, update, MessageReadyToGenerate)
+		sendMessage(bot, update, MessageReadyToGenerate)
 	}
 
 	fmt.Printf("\n\n\n%+v\n\n\n", user)
@@ -125,30 +125,30 @@ func handleGenerateVideo(bot *tg.Bot, update tg.Update) {
 	userId := update.Message.From.ID
 	user, ok := users[userId]
 	if !ok {
-		SendMessage(bot, update, MessageSendStart)
+		sendMessage(bot, update, MessageSendStart)
 		return
 	}
 
 	//0. check if user is already generating video
 	if user.Generating {
-		SendMessage(bot, update, MessageGenerating)
+		sendMessage(bot, update, MessageGenerating)
 		return
 	}
 
 	//0.1 check if user is in cooldown
 	if time.Now().Compare(user.Cooldown) <= 0 {
-		SendMessage(bot, update, MessageCooldown)
+		sendMessage(bot, update, MessageCooldown)
 		return
 	}
 
 	//1. check if user has both audio and video file links
 	if !user.HasAudioURL() {
-		SendMessage(bot, update, MessageNoAudio)
+		sendMessage(bot, update, MessageNoAudio)
 		return
 	}
 
 	if !user.HasImageURL() {
-		SendMessage(bot, update, MessageNoImage)
+		sendMessage(bot, update, MessageNoImage)
 		return
 	}
 
@@ -171,21 +171,21 @@ func GenerateVideo(bot *tg.Bot, update tg.Update, user *types.User) {
 	//1. Download audio and image to the folder
 	audioPath := user.GetAudioPath()
 	imagePath := user.GetImagePath()
-	SendMessage(bot, update, MessageDownloadStarted)
+	sendMessage(bot, update, MessageDownloadStarted)
 
 	err := utils.DownloadAttachment(audioPath, user.AudioURL)
 	if err != nil {
-		SendMessage(bot, update, MessageAudioDownloadFailed)
+		sendMessage(bot, update, MessageAudioDownloadFailed)
 		return
 	}
 	err = utils.DownloadAttachment(imagePath, user.ImageURL)
 	if err != nil {
-		SendMessage(bot, update, MessageImageDownloadFailed)
+		sendMessage(bot, update, MessageImageDownloadFailed)
 		return
 	}
 
-	SendMessage(bot, update, MessageDownloadComplete)
-	SendMessage(bot, update, "Preparing for generation...")
+	sendMessage(bot, update, MessageDownloadComplete)
+	sendMessage(bot, update, "Preparing for generation...")
 
 	//2. Mix audio with effect
 
@@ -195,7 +195,7 @@ func GenerateVideo(bot *tg.Bot, update tg.Update, user *types.User) {
 
 	err = converters.Mix(effect, music, mix)
 	if err != nil {
-		SendMessage(bot, update, "Error mixing audio "+err.Error())
+		sendMessage(bot, update, "Error mixing audio "+err.Error())
 		return
 	}
 
@@ -205,7 +205,7 @@ func GenerateVideo(bot *tg.Bot, update tg.Update, user *types.User) {
 	imageOut := filepath.Join(utils.GetRoot(), "users", fmt.Sprintf("%d", user.Id))
 	err = converters.AssembleImages(image, imageOut) //video frames are stored in users/.../01...32.png
 	if err != nil {
-		SendMessage(bot, update, "Error generating images "+err.Error())
+		sendMessage(bot, update, "Error generating images "+err.Error())
 		return
 	}
 
@@ -214,7 +214,7 @@ func GenerateVideo(bot *tg.Bot, update tg.Update, user *types.User) {
 	secondVideoPath := userPath + "/secondvideo.mp4"
 	err = converters.SecondVideo(patternPath, secondVideoPath) //video is stored in users/.../secondvideo.mp4
 	if err != nil {
-		SendMessage(bot, update, "Error generating a second-long video "+err.Error())
+		sendMessage(bot, update, "Error generating a second-long video "+err.Error())
 		return
 	}
 
@@ -222,7 +222,7 @@ func GenerateVideo(bot *tg.Bot, update tg.Update, user *types.User) {
 	minuteVideoPath := userPath + "/minutevideo.mp4"
 	err = converters.LoopVideo(secondVideoPath, minuteVideoPath)
 	if err != nil {
-		SendMessage(bot, update, "Error generating a minute-long video "+err.Error())
+		sendMessage(bot, update, "Error generating a minute-long video "+err.Error())
 		return
 	}
 
@@ -230,29 +230,45 @@ func GenerateVideo(bot *tg.Bot, update tg.Update, user *types.User) {
 	videoPath := userPath + "/output.mp4"
 	err = converters.AddAudio(mix, minuteVideoPath, videoPath)
 	if err != nil {
-		SendMessage(bot, update, "Error generating the final video "+err.Error())
+		sendMessage(bot, update, "Error generating the final video "+err.Error())
+		return
+	}
+
+	//Check if the video file was actually created
+	if _, err := os.Stat(videoPath); os.IsNotExist(err) {
+		sendMessage(bot, update, "Failed to obtain the final video "+err.Error())
 		return
 	}
 
 	//7. Send the video note to the user
-	SendMessage(bot, update, "Video has been generated, sending...")
+	sendMessage(bot, update, "Video has been generated, sending...")
 
-	videoFile, err := os.Open(videoPath)
-	if err != nil {
-		SendMessage(bot, update, "Can't open the generated video file "+err.Error())
-		return
-	}
+	// videoFile, err := os.Open(videoPath)
+	// if err != nil {
+	// 	sendMessage(bot, update, "Can't open the generated video file "+err.Error())
+	// 	return
+	// }
 
-	bot.SendVideoNote(tu.VideoNote(update.Message.Chat.ChatID(), tg.InputFile{
-		File: videoFile,
-	}))
-
+	bot.SendVideoNote(
+		tu.VideoNote(
+			update.Message.Chat.ChatID(),
+			tu.File(mustOpen(videoPath)),
+		),
+	)
 }
 
-func SendMessage(bot *tg.Bot, update tg.Update, message string) {
+func sendMessage(bot *tg.Bot, update tg.Update, message string) {
 	msg := tu.Message(
 		update.Message.Chat.ChatID(),
 		message,
 	)
 	bot.SendMessage(msg)
+}
+
+func mustOpen(filename string) *os.File {
+	file, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
+	return file
 }

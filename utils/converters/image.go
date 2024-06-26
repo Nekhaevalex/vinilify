@@ -89,16 +89,16 @@ func LoadAndResizeImage(path string, width uint, height uint) (image.Image, erro
 
 func AssembleImages(imagePath, outpath string) error {
 
-	disk, err := LoadAndResizeImage(diskpath, 1000, 1000)
+	disk, err := LoadAndResizeImage(diskpath, 300, 300)
 	if err != nil {
 		return err
 	}
-	pin, err := LoadAndResizeImage(pinpath, 1000, 1000)
+	pin, err := LoadAndResizeImage(pinpath, 300, 300)
 	if err != nil {
 		return err
 	}
 
-	userpic, err := LoadAndResizeImage(imagePath, 1000, 1000)
+	userpic, err := LoadAndResizeImage(imagePath, 300, 300)
 	if err != nil {
 		return err
 	}

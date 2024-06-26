@@ -14,15 +14,20 @@ func SecondVideo(inputPattern, outputFile string) error {
 	// Use ffmpeg-go to create a video from images
 	fmt.Println(inputPattern)
 
-	err := ffmpeg_go.
-		Input(inputPattern, ffmpeg_go.KwArgs{"r": 24}).
-		Output(outputFile, ffmpeg_go.KwArgs{"vcodec": "libx264", "pix_fmt": "yuv420p"}).
-		OverWriteOutput().
-		Run()
+	cmd := exec.Command("ffmpeg", "-r", "24", "-i", inputPattern, "-vcodec", "libx265", "-pix_fmt", "yuv420p", "-crf", "30", outputFile)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Run()
 
-	if err != nil {
-		return err
-	}
+	// err := ffmpeg_go.
+	// 	Input(inputPattern, ffmpeg_go.KwArgs{"r": 24}).
+	// 	Output(outputFile, ffmpeg_go.KwArgs{"vcodec": "libx265", "pix_fmt": "yuv420p", "crf": "28"}).
+	// 	OverWriteOutput().
+	// 	Run()
+
+	// if err != nil {
+	// 	return err
+	// }
 
 	log.Println("Video created!")
 	return nil

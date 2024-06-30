@@ -163,6 +163,8 @@ func GenerateVideo(bot *tg.Bot, update tg.Update, user *types.User) {
 	defer func() {
 		user.Generating = false
 		user.Cooldown = time.Now().Add(time.Second * 100)
+		user.AudioURL = ""
+		user.ImageURL = ""
 	}()
 
 	assetsPath := utils.GetAssets()
@@ -198,6 +200,19 @@ func GenerateVideo(bot *tg.Bot, update tg.Update, user *types.User) {
 		sendMessage(bot, update, "Error mixing audio "+err.Error())
 		return
 	}
+
+	//2.1 Add vinyl effects
+	//2.1.1 Convert mp3 to wav
+	mixWav := userPath + "/mix.wav"
+	converters.Convert(mix, mixWav)
+
+	//2.1.2 Add vinyl effects
+	mixWavWithEffects := userPath + "/mix_with_effects.wav"
+	converters.AddVinylEffects(mixWav, mixWavWithEffects)
+
+	//2.1.3 Convert back to mp3
+	mix = userPath + "/mix.mp3"
+	converters.Convert(mixWavWithEffects, mix)
 
 	//3. Generate images
 
@@ -242,12 +257,6 @@ func GenerateVideo(bot *tg.Bot, update tg.Update, user *types.User) {
 
 	//7. Send the video note to the user
 	sendMessage(bot, update, "Video has been generated, sending...")
-
-	// videoFile, err := os.Open(videoPath)
-	// if err != nil {
-	// 	sendMessage(bot, update, "Can't open the generated video file "+err.Error())
-	// 	return
-	// }
 
 	bot.SendVideoNote(
 		tu.VideoNote(

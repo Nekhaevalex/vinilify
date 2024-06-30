@@ -49,7 +49,7 @@ func LoopVideo(inputFile, outputFile string) error {
 }
 
 func AddAudio(audioFile, videoFile, outputFile string) error {
-	cmd := exec.Command("ffmpeg", "-i", videoFile, "-i", audioFile, "-c", "copy", "-map", "0:v:0", "-map", "1:a:0", outputFile, "-y")
+	cmd := exec.Command("ffmpeg", "-i", videoFile, "-i", audioFile, "-c", "copy", "-map", "0:v:0", "-map", "1:a:0", "-shortest", outputFile, "-y")
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	err := cmd.Run()

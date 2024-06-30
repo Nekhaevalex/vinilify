@@ -1,6 +1,8 @@
 package converters
 
 import (
+	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
 
@@ -15,4 +17,22 @@ func TestMixFull(t *testing.T) {
 	if err != nil {
 		t.Fatal("error: ", err)
 	}
+}
+
+func TestConvertAudio(t *testing.T) {
+	inputFile := "../../users/286946560/mix.mp3"
+	outputFile := "../../users/286946560/mix.wav"
+	cmd := exec.Command("ffmpeg", "-i", inputFile, outputFile)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Run()
+}
+
+func TestAudioEffect(t *testing.T) {
+	inputFile := "../../users/286946560/mix.wav"
+	outputFile := "../../users/286946560/mix_filtered.wav"
+	cmd := exec.Command("sox", inputFile, outputFile, "sinc", "220-12k")
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Run()
 }

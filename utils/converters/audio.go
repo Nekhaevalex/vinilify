@@ -2,6 +2,7 @@ package converters
 
 import (
 	"os"
+	"os/exec"
 
 	ffmpeg_go "github.com/u2takey/ffmpeg-go"
 )
@@ -28,6 +29,27 @@ func Mix(effect, music, outfile string) error {
 		ffmpeg_go.Args{"inputs=2:duration=first:dropout_transition=2"},
 	).Output(outfile).Run()
 }
+
+func Convert(inputFile, outputFile string) error {
+	cmd := exec.Command("ffmpeg", "-i", inputFile, outputFile, "-y")
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func AddVinylEffects(inputFile, outputFile string) error {
+	cmd := exec.Command("sox", inputFile, outputFile, "sinc", "220-12k")
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	err := cmd.Run()
+	return err
+}
+
+// Helpers
 
 func fileExists(filename string) bool {
 	_, err := os.Stat(filename)
